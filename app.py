@@ -208,6 +208,37 @@ def tasks():
 @app.route("/calendar/")
 @login_required
 def calendar():
+class Event(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    start_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    end_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+@app.route('/calendar')
+def index():
+    events = Event.query.all()
+    return render_template('calendar.html', events=events)
+
+@app.route('/add_event', methods=['POST'])
+def add_event():
+    title = request.form['title']
+    start_date = datetime.strptime(request.form['start_date'], '%Y-%m-%dT%H:%M')
+    end_date = datetime.strptime(request.form['end_date'], '%Y-%m-%dT%H:%M')
+
+    new_event = Event(title=title, start_date=start_date, end_date=end_date)
+
+    try:
+        db.session.add(new_event)
+        db.session.commit()
+        return redirect(url_for('calendar'))
+    except:
+        return 'Error adding event'
+
+if __name__ == '__main__':
+    db.create_all()
+    app.run(debug=True)
+
+    
     return render_template("calendar.html")
 
 # myPlants Page Routes:
